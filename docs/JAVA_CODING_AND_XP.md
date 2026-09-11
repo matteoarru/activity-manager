@@ -25,6 +25,8 @@ Changes follow red-green-refactor:
 
 The test pyramid is deliberate: pure domain tests are fast and deterministic; API tests cover authentication, authorisation, validation and persistence boundaries; browser tests cover supported user journeys. Tests describe observable behaviour and use stable business identifiers, never database row order.
 
+For a cross-component workflow, use production Spring wiring with an isolated H2 datasource and disposable infrastructure paths. Exercise the real security, controller, repository and adapter path; clean all test-created records and evidence files in teardown. Do not claim component-integration coverage from a test that mocks the boundary under examination.
+
 Definition of done also includes updated traceability, focused automated evidence, secure error handling, documentation and a clean diff. A release is built and tagged only from the exact source commit that passed the release gate.
 
 ## Review checklist

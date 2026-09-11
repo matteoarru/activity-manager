@@ -29,6 +29,10 @@ This repository follows the EULECT coding principles, adapted for a Java/Spring 
 - Use stable business identifiers as React keys, never row positions.
 - Prefer semantic HTML and accessible native controls before ARIA.
 - Keep CSS tokens in variables and use content-driven responsive layouts.
+- Keep `main.tsx` limited to application bootstrap. Put session bootstrap in `App`, feature navigation and data orchestration in a page-level component, and each independently understandable UI capability in `components/`.
+- Components accept explicit typed props and emit actions through callbacks. Do not pass setters or broad page state through several layers when a feature-level callback expresses the intent.
+- Preserve accessible names, labels, heading IDs and live-region roles during refactors; Playwright selectors based on these are part of the interface contract.
+- Keep list sorting and pagination derivation close to the list component. Keep API calls and transient submission state close to the feature form or panel that owns them.
 
 ## Extreme Programming baseline
 

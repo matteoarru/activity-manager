@@ -19,6 +19,6 @@ Additional user requests that change behaviour or quality expectations are recor
 
 ## E2E policy
 
-E2E tests use stable accessible labels and business codes, never row positions. They start the Vite frontend and synthetic Spring API, and use the installed Chrome channel. Each supported journey has an independently diagnosable test for its success and relevant recovery/denial path.
+E2E tests use stable accessible labels and business codes, never row positions. They start the Vite frontend and a fresh synthetic Spring API using an in-memory H2 datasource, and use the installed Chrome channel. Each supported journey has an independently diagnosable test for its success and relevant recovery/denial path; generated activities and invitations are discarded when the suite finishes.
 
 Implemented requirements have E2E evidence in [E2E_REQUIREMENTS_MATRIX.md](E2E_REQUIREMENTS_MATRIX.md). Deferred requirements remain explicitly marked as not testable until their implementation is accepted; they must not be reported as covered by placeholder tests.

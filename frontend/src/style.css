@@ -43,7 +43,7 @@ header {
   color: var(--colour-white);
   border-top: 5px solid var(--colour-yellow-400);
   border-radius: 4px;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -64,6 +64,13 @@ h1 {
   margin: 0.2rem 0;
   font-size: 2.25rem;
   line-height: 1.15;
+}
+header h1 {
+  font-size: 1.85rem;
+}
+header p:not(.eyebrow) {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
 }
 h2 {
   line-height: 1.2;
@@ -173,6 +180,38 @@ button.secondary {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;
+}
+.identity-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: right;
+}
+.identity-summary > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 2px solid var(--colour-white);
+  border-radius: 50%;
+  background: #f5c451;
+  color: var(--colour-navy-900);
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.user-avatar:hover {
+  background: var(--colour-yellow-400);
+  border-color: var(--colour-yellow-400);
+}
+.user-menu {
+  display: flex;
+  justify-content: flex-end;
 }
 .identity small {
   color: #dbeafe;
@@ -350,6 +389,9 @@ footer {
   .identity {
     align-items: flex-start;
     margin-top: 1rem;
+  }
+  .identity-summary {
+    text-align: left;
   }
   .grid {
     grid-template-columns: 1fr;

@@ -367,6 +367,7 @@ function Workspace({
 }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showSetup, setShowSetup] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null,
   );
@@ -409,11 +410,32 @@ function Workspace({
             <p>Signed-in workspace for {profile.username}</p>
           </div>
           <div className="identity">
-            <span>{profile.username}</span>
-            <small>{role}</small>
-            <button className="utility-button" type="button" onClick={logout}>
-              Sign out
-            </button>
+            <div className="identity-summary">
+              <div>
+                <span>{profile.username}</span>
+                <small>{role}</small>
+              </div>
+              <button
+                className="user-avatar"
+                type="button"
+                aria-label={`Open account menu for ${profile.username}`}
+                aria-expanded={showUserMenu}
+                onClick={() => setShowUserMenu((current) => !current)}
+              >
+                {profile.username.split(".")[0].slice(0, 2).toUpperCase()}
+              </button>
+            </div>
+            {showUserMenu && (
+              <div className="user-menu">
+                <button
+                  className="utility-button"
+                  type="button"
+                  onClick={logout}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </header>
         {showSetup ? (

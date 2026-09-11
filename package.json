@@ -1,0 +1,13 @@
+{
+  "name": "cepol-event-operations",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "verify": "bash scripts/verify-documentation.sh && npm run test",
+    "test": "JAVA_HOME=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2} PATH=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2}/bin:/home/matteo/.maven/maven-3.9.16/bin:$PATH mvn test",
+    "test:coverage": "JAVA_HOME=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2} PATH=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2}/bin:/home/matteo/.maven/maven-3.9.16/bin:$PATH mvn -Pcoverage verify",
+    "test:e2e": "npm --prefix frontend run test:e2e",
+    "build": "JAVA_HOME=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2} PATH=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2}/bin:/home/matteo/.maven/maven-3.9.16/bin:$PATH mvn package && npm --prefix frontend run build",
+    "release:check": "npm run verify && npm run test:coverage && npm run test:e2e && npm run build"
+  }
+}

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: event-operations
+  profiles:
+    default: synthetic
+  datasource:
+    url: jdbc:h2:file:./.local/event-operations;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    enabled: false
+  sql:
+    init:
+      mode: always
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+  error:
+    include-message: never

@@ -1,21 +1,24 @@
 # Test plan
 
-## Deriving evidence
+## Evidence strategy
 
-For each requirement: identify acceptance criteria, user/system risks, failure modes and the lowest useful test level. Map the result in `TRACEABILITY.md`.
+Tests are derived from observable acceptance criteria and risk:
 
-| Test level | Purpose | Typical evidence |
-| --- | --- | --- |
-| Unit | Pure rules and transformations | Fast deterministic tests; target 100% for core domain logic |
-| Component | UI/service behaviour at a boundary | Loading, empty, error, accessibility and validation states |
-| Integration | Real contracts across introduced boundaries | Resettable sandbox services and versioned fixtures |
-| E2E | Supported user/system journeys | Independently diagnosable browser or API journeys |
-| Release | Deployable product confidence | Security audit, checks, coverage, build, packaging and smoke tests |
+- domain unit tests cover money, commitment and authorisation invariants;
+- API integration tests cover authentication, role scope, validation, persistence, uploads and invitation recording;
+- Playwright E2E tests cover the supported login and activity-setup journeys through the real frontend and API;
+- the requirement matrix records which requirements are implemented, tested or still deferred.
 
 ## Coverage policy
 
-Set enforceable thresholds separately for statements, branches, functions and lines. Explain the thresholds based on the application type; do not lower them merely to hide an untested behaviour. E2E evidence complements, never replaces, unit and component coverage.
+`npm run test:coverage` runs JaCoCo in the Maven `coverage` profile and fails the build below 90% instruction or line coverage for every module that contains executable code. Branch coverage remains diagnostic; high-risk domain and permission paths receive focused denial tests in addition to the global gate.
 
-## Future integration strategy
+The normal fast gate is `npm run test`. The browser gate is `npm run test:e2e`. `npm run release:check` runs both gates.
 
-When APIs, identity, persistence, third-party systems, scheduled imports or queues are introduced, add sandbox integration tests in the same change. Test contracts, validation, authentication/authorisation, timeouts, retry/idempotency, partial failures, migrations and operator-visible diagnostics.
+Additional user requests that change behaviour or quality expectations are recorded as immutable requirements before completion is reported. They must appear in `REQUIREMENTS.md`, `TRACEABILITY.md` and, where applicable, the E2E matrix.
+
+## E2E policy
+
+E2E tests use stable accessible labels and business codes, never row positions. They start the Vite frontend and synthetic Spring API, and use the installed Chrome channel. Each supported journey has an independently diagnosable test for its success and relevant recovery/denial path.
+
+Implemented requirements have E2E evidence in [E2E_REQUIREMENTS_MATRIX.md](E2E_REQUIREMENTS_MATRIX.md). Deferred requirements remain explicitly marked as not testable until their implementation is accepted; they must not be reported as covered by placeholder tests.

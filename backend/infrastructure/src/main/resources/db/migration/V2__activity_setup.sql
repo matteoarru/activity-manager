@@ -1,0 +1,12 @@
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS description VARCHAR(4000) NOT NULL DEFAULT '';
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS expected_participants INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS invitation_modality VARCHAR(40) NOT NULL DEFAULT 'NOMINATION';
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS cpl_reference VARCHAR(120);
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS cpl_by_cost_type VARCHAR(4000) NOT NULL DEFAULT '{}';
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS curricula_file_name VARCHAR(255);
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS curricula_object_key VARCHAR(255);
+ALTER TABLE activity ADD COLUMN IF NOT EXISTS curricula_sha256 CHAR(64);
+CREATE TABLE IF NOT EXISTS cnu (username VARCHAR(120) PRIMARY KEY, organisation VARCHAR(240) NOT NULL, country_code CHAR(2) NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
+CREATE TABLE IF NOT EXISTS activity_invitation (activity_id VARCHAR(36) NOT NULL, cnu_username VARCHAR(120) NOT NULL, modality VARCHAR(40) NOT NULL, sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, sent_by VARCHAR(120) NOT NULL, PRIMARY KEY (activity_id, cnu_username), FOREIGN KEY (activity_id) REFERENCES activity(id), FOREIGN KEY (cnu_username) REFERENCES cnu(username));
+INSERT INTO cnu (username, organisation, country_code) SELECT 'cnu.clara', 'Synthetic National Unit A', 'FR' WHERE NOT EXISTS (SELECT 1 FROM cnu WHERE username = 'cnu.clara');
+INSERT INTO cnu (username, organisation, country_code) SELECT 'cnu.niko', 'Synthetic National Unit B', 'FI' WHERE NOT EXISTS (SELECT 1 FROM cnu WHERE username = 'cnu.niko');

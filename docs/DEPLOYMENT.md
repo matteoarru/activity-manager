@@ -1,13 +1,5 @@
 # Deployment and release
 
-Document environments, prerequisites, configuration/secrets ownership, deployment invocation, health checks, rollback, monitoring and release artefacts.
+Local development uses Java 25, Maven Wrapper, Node/npm and synthetic configuration. Production is conditional EU-hosted stateless API/worker with private PostgreSQL/object storage and managed secrets; it is not provisioned here. On Windows run the Bash documentation verifier through WSL/Git Bash.
 
-## Release contract
-
-1. Update version and changelog.
-2. Commit the release candidate.
-3. Run `release:check` on that exact commit.
-4. Record command, date, commit, runtime/tool versions, lockfile state, result and artefact locations.
-5. Tag and push only when the gate passes.
-
-CI must call the same project commands that developers use locally and in VS Code tasks.
+Commands are `npm run verify`, `test:coverage`, `test:e2e`, `build` and `release:check`, mirrored in VS Code/CI. No tag, push or deployment is authorised.

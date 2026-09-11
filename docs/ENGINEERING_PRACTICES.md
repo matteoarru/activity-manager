@@ -6,3 +6,4 @@
 - Keep pull requests small, reviewable and evidence-backed.
 - Treat warnings and failed quality gates as work to assess, not output to suppress.
 - Use ADRs for decisions that affect more than a local implementation detail.
+The visual rules are in [STYLE_GUIDE.md](STYLE_GUIDE.md), and the implementation conventions are in [CODING_STYLE.md](CODING_STYLE.md). Java-specific guidance and the XP baseline are also retained in [JAVA_CODING_AND_XP.md](JAVA_CODING_AND_XP.md).

@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { request } from "./api/client";
 import {
@@ -36,7 +36,7 @@ function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
       </a>
       <main className="login">
         <section aria-labelledby="login-title">
-          <p className="eyebrow">Synthetic local demonstration</p>
+          <p className="eyebrow">Activity Management Suite</p>
           <h1 id="login-title">Event Operations</h1>
           <p>Sign in with a test profile to view the operational workspace.</p>
           <form onSubmit={submit}>
@@ -111,7 +111,7 @@ function SetupPanel({
       },
     };
     try {
-      const activity = await request<Activity>("/v1/activities", {
+      let activity = await request<Activity>("/v1/activities", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -119,11 +119,14 @@ function SetupPanel({
       if (file instanceof File && file.size > 0) {
         const upload = new FormData();
         upload.append("file", file);
-        await request<Activity>(`/v1/activities/${activity.id}/curriculum`, {
-          method: "POST",
-          body: upload,
-          headers: {},
-        });
+        activity = await request<Activity>(
+          `/v1/activities/${activity.id}/curriculum`,
+          {
+            method: "POST",
+            body: upload,
+            headers: {},
+          },
+        );
       }
       onCreated(activity);
       setMessage("Activity created. You can now invite CNUs to nominate.");
@@ -239,6 +242,117 @@ function SetupPanel({
   );
 }
 
+function EditActivityPanel({
+  activity,
+  onUpdated,
+  onCancel,
+}: {
+  activity: Activity;
+  onUpdated: (activity: Activity) => void;
+  onCancel: () => void;
+}) {
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const updated = await request<Activity>(`/v1/activities/${activity.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          title: form.get("title"),
+          description: form.get("description"),
+          venue: form.get("venue"),
+          startsOn: form.get("startsOn"),
+          endsOn: form.get("endsOn"),
+          expectedParticipants: Number(form.get("expectedParticipants")),
+        }),
+      });
+      onUpdated(updated);
+    } catch (reason) {
+      setMessage(
+        reason instanceof Error ? reason.message : "Activity update failed",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section aria-labelledby="edit-activity-title">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Activity management</p>
+          <h2 id="edit-activity-title">Edit activity</h2>
+          <p>Update the operational details for {activity.courseReference}.</p>
+        </div>
+        <button className="secondary" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+      <form className="setup-form" onSubmit={submit}>
+        <label>
+          Title
+          <input required name="title" defaultValue={activity.title} />
+        </label>
+        <label>
+          Description
+          <textarea
+            name="description"
+            rows={3}
+            defaultValue={activity.description}
+          />
+        </label>
+        <div className="form-grid">
+          <label>
+            Venue
+            <input required name="venue" defaultValue={activity.venue} />
+          </label>
+          <label>
+            Expected participants
+            <input
+              required
+              name="expectedParticipants"
+              type="number"
+              min="0"
+              defaultValue={activity.expectedParticipants}
+            />
+          </label>
+          <label>
+            Starts
+            <input
+              required
+              name="startsOn"
+              type="date"
+              defaultValue={activity.startsOn}
+            />
+          </label>
+          <label>
+            Ends
+            <input
+              required
+              name="endsOn"
+              type="date"
+              defaultValue={activity.endsOn}
+            />
+          </label>
+        </div>
+        <button disabled={busy} type="submit">
+          {busy ? "Saving…" : "Save changes"}
+        </button>
+        {message && (
+          <p role="alert" className="error">
+            {message}
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}
+
 function InvitationPanel({ activity }: { activity: Activity }) {
   const [cnus, setCnus] = useState<Cnu[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -296,16 +410,37 @@ function ActivityDetail({
   activity,
   canSetup,
   onBack,
+  onEdit,
 }: {
   activity: Activity;
   canSetup: boolean;
   onBack: () => void;
+  onEdit: () => void;
 }) {
   return (
     <section aria-labelledby="activity-detail-title" className="detail-page">
-      <button className="secondary back-link" type="button" onClick={onBack}>
-        Back to activities
-      </button>
+      <div className="detail-actions">
+        <button
+          className="icon-button back-link"
+          type="button"
+          onClick={onBack}
+          aria-label="Back to activities"
+          title="Back to activities"
+        >
+          ←
+        </button>
+        {canSetup && (
+          <button
+            className="icon-button"
+            type="button"
+            onClick={onEdit}
+            aria-label="Edit activity"
+            title="Edit activity"
+          >
+            ✎
+          </button>
+        )}
+      </div>
       <p className="eyebrow">Activity details</p>
       <div className="detail-heading">
         <div>
@@ -340,6 +475,10 @@ function ActivityDetail({
           <dt>Invitation modality</dt>
           <dd>Nomination</dd>
         </div>
+        <div>
+          <dt>Curricula file</dt>
+          <dd>{activity.curriculaFileName ?? "Not attached"}</dd>
+        </div>
       </dl>
       {canSetup && (
         <section
@@ -358,6 +497,30 @@ function ActivityDetail({
   );
 }
 
+type ActivitySort = "date-asc" | "date-desc" | "title-asc" | "status-asc";
+
+function compareActivities(
+  left: Activity,
+  right: Activity,
+  sort: ActivitySort,
+) {
+  if (sort === "title-asc") {
+    return left.title.localeCompare(right.title);
+  }
+  if (sort === "status-asc") {
+    return (
+      left.status.localeCompare(right.status) ||
+      left.title.localeCompare(right.title)
+    );
+  }
+  const direction = sort === "date-asc" ? 1 : -1;
+  return (
+    direction *
+    (left.startsOn.localeCompare(right.startsOn) ||
+      left.title.localeCompare(right.title))
+  );
+}
+
 function Workspace({
   profile,
   onLogout,
@@ -367,7 +530,11 @@ function Workspace({
 }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showSetup, setShowSetup] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [activitySort, setActivitySort] = useState<ActivitySort>("date-asc");
+  const [activityPage, setActivityPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null,
   );
@@ -381,6 +548,26 @@ function Workspace({
       .then(setActivities)
       .catch(() => undefined);
   }, []);
+  const sortedActivities = useMemo(
+    () =>
+      [...activities].sort((left, right) =>
+        compareActivities(left, right, activitySort),
+      ),
+    [activities, activitySort],
+  );
+  const pageCount = Math.max(1, Math.ceil(sortedActivities.length / pageSize));
+  const visibleActivities = sortedActivities.slice(
+    (activityPage - 1) * pageSize,
+    activityPage * pageSize,
+  );
+  useEffect(() => {
+    setActivityPage(1);
+  }, [activitySort, pageSize]);
+  useEffect(() => {
+    if (activityPage > pageCount) {
+      setActivityPage(pageCount);
+    }
+  }, [activityPage, pageCount]);
   async function logout() {
     try {
       await request<{ status: string }>("/auth/logout", { method: "POST" });
@@ -395,9 +582,11 @@ function Workspace({
         href={
           showSetup
             ? "#setup"
-            : selectedActivity
-              ? "#activity-detail-title"
-              : "#activities"
+            : editingActivity
+              ? "#edit-activity-title"
+              : selectedActivity
+                ? "#activity-detail-title"
+                : "#activities"
         }
       >
         Skip to main content
@@ -405,9 +594,8 @@ function Workspace({
       <main id="main-content">
         <header>
           <div>
-            <p className="eyebrow">Synthetic local demonstration</p>
+            <p className="eyebrow">Activity Management Suite</p>
             <h1>Event Operations</h1>
-            <p>Signed-in workspace for {profile.username}</p>
           </div>
           <div className="identity">
             <div className="identity-summary">
@@ -446,11 +634,26 @@ function Workspace({
             }}
             onCancel={() => setShowSetup(false)}
           />
+        ) : editingActivity ? (
+          <EditActivityPanel
+            activity={editingActivity}
+            onUpdated={(updated) => {
+              setActivities((current) =>
+                current.map((activity) =>
+                  activity.id === updated.id ? updated : activity,
+                ),
+              );
+              setSelectedActivity(updated);
+              setEditingActivity(null);
+            }}
+            onCancel={() => setEditingActivity(null)}
+          />
         ) : selectedActivity ? (
           <ActivityDetail
             activity={selectedActivity}
             canSetup={canSetup}
             onBack={() => setSelectedActivity(null)}
+            onEdit={() => setEditingActivity(selectedActivity)}
           />
         ) : (
           <section aria-labelledby="activities" className="activity-home">
@@ -471,29 +674,94 @@ function Workspace({
                 No activities are assigned to this profile.
               </p>
             ) : (
-              <ul className="activity-list" aria-label="Activities">
-                {activities.map((activity) => (
-                  <li key={activity.id}>
-                    <button
-                      className="activity-row"
-                      type="button"
-                      onClick={() => setSelectedActivity(activity)}
+              <>
+                <div
+                  className="activity-controls"
+                  aria-label="Activity list controls"
+                >
+                  <label>
+                    Order by
+                    <select
+                      value={activitySort}
+                      onChange={(event) =>
+                        setActivitySort(event.target.value as ActivitySort)
+                      }
                     >
-                      <span className="record-code">
-                        {activity.courseReference}
-                      </span>
-                      <span className="activity-summary">
-                        <strong>{activity.title}</strong>
-                        <small>
-                          {activity.venue} · {formatDate(activity.startsOn)} to{" "}
-                          {formatDate(activity.endsOn)}
-                        </small>
-                      </span>
-                      <span className="status-badge">{activity.status}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      <option value="date-asc">
+                        Start date (oldest first)
+                      </option>
+                      <option value="date-desc">
+                        Start date (newest first)
+                      </option>
+                      <option value="title-asc">Title (A–Z)</option>
+                      <option value="status-asc">Status (A–Z)</option>
+                    </select>
+                  </label>
+                </div>
+                <ul className="activity-list" aria-label="Activities">
+                  {visibleActivities.map((activity) => (
+                    <li key={activity.id}>
+                      <button
+                        className="activity-row"
+                        type="button"
+                        onClick={() => setSelectedActivity(activity)}
+                      >
+                        <span className="record-code">
+                          {activity.courseReference}
+                        </span>
+                        <span className="activity-summary">
+                          <strong>{activity.title}</strong>
+                          <small>
+                            {activity.venue} · {formatDate(activity.startsOn)}{" "}
+                            to {formatDate(activity.endsOn)}
+                          </small>
+                        </span>
+                        <span className="status-badge">{activity.status}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <nav
+                  className="activity-pagination"
+                  aria-label="Activity pages"
+                >
+                  <div className="pagination-summary">
+                    <span aria-live="polite">
+                      Page {activityPage} of {pageCount}
+                    </span>
+                    <label>
+                      Activities per page
+                      <select
+                        value={pageSize}
+                        onChange={(event) =>
+                          setPageSize(Number(event.target.value))
+                        }
+                      >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button
+                    className="secondary pagination-button"
+                    type="button"
+                    onClick={() => setActivityPage((current) => current - 1)}
+                    disabled={activityPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    className="secondary pagination-button"
+                    type="button"
+                    onClick={() => setActivityPage((current) => current + 1)}
+                    disabled={activityPage === pageCount}
+                  >
+                    Next
+                  </button>
+                </nav>
+              </>
             )}
           </section>
         )}

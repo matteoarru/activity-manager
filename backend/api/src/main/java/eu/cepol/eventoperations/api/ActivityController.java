@@ -24,6 +24,7 @@ class ActivityController {
   private boolean hasGlobalVisibility(Authentication actor) {
     return actor.getAuthorities().stream()
         .anyMatch(authority -> authority.getAuthority().equals("ROLE_FINANCE")
-            || authority.getAuthority().equals("ROLE_TECHNICAL_ADMIN"));
+            || authority.getAuthority().equals("ROLE_TECHNICAL_ADMIN")
+            || authority.getAuthority().equals("ROLE_AO"));
   }
 }

@@ -1,1 +1,55 @@
-{"version":"2.0.0","tasks":[{"label":"Test: Run Test Task","type":"npm","script":"test","group":{"kind":"test","isDefault":true}},{"label":"Standard: Verify","type":"npm","script":"verify","group":"test"},{"label":"Standard: Coverage","type":"npm","script":"test:coverage","group":"test"},{"label":"Standard: E2E","type":"npm","script":"test:e2e","group":"test"},{"label":"Standard: Build","type":"npm","script":"build","group":"build"},{"label":"Standard: Full release gate","type":"npm","script":"release:check","group":"test"}]}
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Activity Manager: API",
+      "type": "shell",
+      "command": "export JAVA_HOME=${JAVA_HOME:-/home/matteo/.jdk/jdk-25.0.2}; export PATH=$JAVA_HOME/bin:/home/matteo/.maven/maven-3.9.16/bin:$PATH; mvn -q -f backend/api/pom.xml org.springframework.boot:spring-boot-maven-plugin:4.1.0:run",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "spring",
+        "pattern": { "regexp": ".*" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting EventOperationsApplication",
+          "endsPattern": "Started EventOperationsApplication"
+        }
+      },
+      "presentation": { "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "Activity Manager: Frontend",
+      "type": "shell",
+      "command": "npm run dev -- --host 127.0.0.1",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": ".*" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:"
+        }
+      },
+      "presentation": { "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "Activity Manager: Start",
+      "dependsOn": ["Activity Manager: API", "Activity Manager: Frontend"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Run Test Task",
+      "type": "npm",
+      "script": "test",
+      "group": { "kind": "test", "isDefault": true }
+    },
+    { "label": "Standard: Verify", "type": "npm", "script": "verify", "group": "test" },
+    { "label": "Standard: Coverage", "type": "npm", "script": "test:coverage", "group": "test" },
+    { "label": "Standard: E2E", "type": "npm", "script": "test:e2e", "group": "test" },
+    { "label": "Standard: Build", "type": "npm", "script": "build", "group": "build" },
+    { "label": "Standard: Full release gate", "type": "npm", "script": "release:check", "group": "test" }
+  ]
+}

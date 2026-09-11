@@ -6,6 +6,7 @@ import eu.cepol.eventoperations.infrastructure.activity.CurriculumStorage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -28,7 +30,8 @@ import tools.jackson.databind.ObjectMapper;
 @RequestMapping("/api/v1")
 class ActivitySetupController {
   private static final String NOMINATION = "NOMINATION";
-  private static final List<String> TEAM_ROLES = List.of("ROLE_AM", "ROLE_PO", "ROLE_IA");
+  private static final List<String> TEAM_ROLES =
+      List.of("ROLE_AM", "ROLE_PO", "ROLE_IA", "ROLE_AO");
 
   private final ActivityRepository activities;
   private final CurriculumStorage curricula;
@@ -70,6 +73,22 @@ class ActivitySetupController {
         request.cplReference(),
         cpl,
         request.invitationModality());
+  }
+
+  @PutMapping("/activities/{id}")
+  ActivityRecord update(
+      @PathVariable("id") String id,
+      @Valid @RequestBody UpdateActivity request,
+      Authentication actor) {
+    requireManagerOf(id, actor);
+    return activities.update(
+        id,
+        request.title(),
+        request.description(),
+        request.venue(),
+        request.startsOn(),
+        request.endsOn(),
+        request.expectedParticipants());
   }
 
   @PostMapping(value = "/activities/{id}/curriculum", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -114,16 +133,23 @@ class ActivitySetupController {
     boolean teamMember = actor.getAuthorities().stream()
         .anyMatch(authority -> TEAM_ROLES.contains(authority.getAuthority()));
     if (!teamMember) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AM, PO or IA may set up an activity");
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Only AM, PO, IA or AO may manage an activity");
     }
   }
 
   private void requireManagerOf(String id, Authentication actor) {
     requireTeam(actor);
-    boolean assigned = activities.findVisibleTo(actor.getName()).stream().anyMatch(a -> a.id().equals(id));
+    boolean assigned = isAuthorisingOfficer(actor)
+        || activities.findVisibleTo(actor.getName()).stream().anyMatch(a -> a.id().equals(id));
     if (!assigned) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Activity is outside your assignment scope");
     }
+  }
+
+  private boolean isAuthorisingOfficer(Authentication actor) {
+    return actor.getAuthorities().stream()
+        .anyMatch(authority -> authority.getAuthority().equals("ROLE_AO"));
   }
 
   private static String safeName(String original) {
@@ -133,6 +159,18 @@ class ActivitySetupController {
     return original.replaceAll("[^A-Za-z0-9._-]", "_");
   }
   record InvitationRequest(List<String> cnuUsernames) {}
+
+  record UpdateActivity(
+      @NotBlank String title,
+      String description,
+      @NotBlank String venue,
+      @NotNull java.time.LocalDate startsOn,
+      @NotNull java.time.LocalDate endsOn,
+      @Min(0) int expectedParticipants) {
+    UpdateActivity {
+      description = description == null ? "" : description;
+    }
+  }
 
   record CreateActivity(
       @NotBlank String code,

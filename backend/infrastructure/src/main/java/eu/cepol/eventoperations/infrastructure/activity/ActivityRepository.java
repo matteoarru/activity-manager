@@ -40,6 +40,10 @@ public class ActivityRepository {
     return jdbc.query(ACTIVITY_SELECT + ACTIVITY_SCOPE_ORDER, this::mapActivity);
   }
 
+  public ActivityRecord findById(String id) {
+    return jdbc.queryForObject(ACTIVITY_SELECT + "WHERE id = ?", this::mapActivity, id);
+  }
+
   public ActivityRecord create(
       String code,
       String title,
@@ -90,6 +94,27 @@ public class ActivityRepository {
         objectKey,
         sha256,
         id);
+  }
+
+  public ActivityRecord update(
+      String id,
+      String title,
+      String description,
+      String venue,
+      LocalDate startsOn,
+      LocalDate endsOn,
+      int expectedParticipants) {
+    jdbc.update(
+        "UPDATE activity SET title = ?, description = ?, venue = ?, starts_on = ?, ends_on = ?, "
+            + "expected_participants = ? WHERE id = ?",
+        title,
+        description,
+        venue,
+        startsOn,
+        endsOn,
+        expectedParticipants,
+        id);
+    return findById(id);
   }
 
   public int invite(String activityId, List<String> cnuUsernames, String sentBy) {

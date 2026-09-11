@@ -11,6 +11,7 @@ export type Activity = {
   status: string;
   expectedParticipants: number;
   cplReference?: string;
+  curriculaFileName?: string;
 };
 
 export type Cnu = {
@@ -36,11 +37,12 @@ export const loginProfiles = [
   ["Finance", "finance.fran"],
   ["Provider contact", "provider.pavel"],
   ["CNU", "cnu.clara"],
+  ["CNU", "cnu.niko"],
   ["Attendee", "attendee.aria"],
   ["Technical administrator", "admin.taylor"],
 ] as const;
 
 export const canSetUpActivities = (profile: Profile): boolean =>
   profile.roles.some((role) =>
-    ["ROLE_AM", "ROLE_PO", "ROLE_IA"].includes(role),
+    ["ROLE_AM", "ROLE_PO", "ROLE_IA", "ROLE_AO"].includes(role),
   );

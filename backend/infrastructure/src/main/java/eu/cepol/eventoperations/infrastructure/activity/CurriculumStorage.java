@@ -6,12 +6,18 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /** Local synthetic evidence store. Production must replace this port with private object storage and scanning. */
 @Component
 public class CurriculumStorage {
-  private final Path root = Path.of(".local", "curricula");
+  private final Path root;
+
+  public CurriculumStorage(@Value("${app.curricula.root:.local/curricula}") String root) {
+    this.root = Path.of(root);
+  }
+
   public StoredFile store(byte[] bytes) throws IOException {
     if (bytes == null || bytes.length == 0 || bytes.length > 20_000_000) throw new IllegalArgumentException("Curriculum file is empty or exceeds 20 MB");
     Files.createDirectories(root);

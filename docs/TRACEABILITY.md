@@ -1,54 +1,61 @@
 # Traceability
 
-| Requirement | Implementation | Tests/evidence | Status |
-| --- | --- | --- | --- |
-| `FR-001` | `ActivitySetupController`, `ActivityRepository`, activity dashboard | `SyntheticLoginIntegrationTest`, `frontend/e2e/activity-setup.spec.ts` | Partial implementation; E2E covered for setup slice |
-| `FR-002` | Nomination invitation API and CNU fixtures | `SyntheticLoginIntegrationTest`; browser coverage tracked in `E2E_REQUIREMENTS_MATRIX.md` | Partial |
-| `FR-011`, `DATA-001`, `DATA-002`, `NFR-001` | domain ledger/application service | `CommitmentLedgerTest` | In progress |
-| `FR-012`, `SEC-001` | actor/delegation guard | `ApprovalAuthorisationTest` | In progress |
-| `FR-013`, `FR-017`, `FR-018` | order/invoice hand-off flow | Deferred; no implementation or E2E claim | Deferred |
-| `SEC-004` | synthetic configuration | configuration review | In progress |
-| `NFR-002`, `NFR-003` | Maven/npm tasks, JaCoCo coverage profile and Vite workspace | `npm run test`, `npm run test:coverage`, `npm run test:e2e` | In progress |
-| `NFR-005` | Requirement register, E2E matrix and traceability workflow | `E2E_REQUIREMENTS_MATRIX.md`, `npm run test:e2e` | Implemented for current scope |
-| `NFR-006` | Maven JaCoCo `coverage` profile and `test:coverage` script | `npm run test:coverage` (90% instruction/line gate) | Implemented |
-| `FR-014`–`FR-016`, `FR-019`–`FR-021`, `DATA-003`, `SEC-002`–`SEC-003`, `NFR-004` | deferred increments | `BACKLOG.md` | Deferred |
+| Requirement                                                                      | Implementation                                                      | Tests/evidence                                                                            | Status                                              |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `FR-001`                                                                         | `ActivitySetupController`, `ActivityRepository`, activity dashboard | `SyntheticLoginIntegrationTest`, `frontend/e2e/activity-setup.spec.ts`                    | Partial implementation; E2E covered for setup slice |
+| `FR-002`                                                                         | Nomination invitation API and CNU fixtures                          | `SyntheticLoginIntegrationTest`; browser coverage tracked in `E2E_REQUIREMENTS_MATRIX.md` | Partial                                             |
+| `FR-011`, `DATA-001`, `DATA-002`, `NFR-001`                                      | domain ledger/application service                                   | `CommitmentLedgerTest`                                                                    | In progress                                         |
+| `FR-012`, `SEC-001`                                                              | actor/delegation guard                                              | `ApprovalAuthorisationTest`                                                               | In progress                                         |
+| `FR-013`, `FR-017`, `FR-018`                                                     | order/invoice hand-off flow                                         | Deferred; no implementation or E2E claim                                                  | Deferred                                            |
+| `SEC-004`                                                                        | synthetic configuration                                             | configuration review                                                                      | In progress                                         |
+| `NFR-002`, `NFR-003`                                                             | Maven/npm tasks, JaCoCo coverage profile and Vite workspace         | `npm run test`, `npm run test:coverage`, `npm run test:e2e`                               | In progress                                         |
+| `NFR-005`                                                                        | Requirement register, E2E matrix and traceability workflow          | `E2E_REQUIREMENTS_MATRIX.md`, `npm run test:e2e`                                          | Implemented for current scope                       |
+| `NFR-006`                                                                        | Maven JaCoCo `coverage` profile and `test:coverage` script          | `npm run test:coverage` (90% instruction/line gate)                                       | Implemented                                         |
+| `NFR-007`                                                                        | Major-object E2E policy, requirement matrix and Playwright journeys | `frontend/e2e/activity-setup.spec.ts`, `E2E_REQUIREMENTS_MATRIX.md`                       | Implemented                                         |
+| `NFR-008`                                                                        | Spring component integration wiring and isolated curriculum storage | `ActivityWorkflowIntegrationTest`                                                         | Implemented                                         |
+| `FR-014`–`FR-016`, `FR-019`–`FR-021`, `DATA-003`, `SEC-002`–`SEC-003`, `NFR-004` | deferred increments                                                 | `BACKLOG.md`                                                                              | Deferred                                            |
 
 ## Individual requirement index
 
-| Requirement | Evidence/status |
-| --- | --- |
-| `FR-001` | Activity setup/read scope; API and Playwright setup evidence; Partial implementation |
-| `FR-002` | Nomination invitation API and Playwright invitation evidence; Partial implementation |
-| `FR-003` | Accepted; self-service slice planned |
-| `FR-004` | Accepted; entitlement slice planned |
-| `FR-005` | Accepted; catering slice planned |
-| `FR-006` | Accepted; fee-rule slice planned |
-| `FR-007` | Accepted; provider model planned |
-| `FR-008` | Accepted; revision model planned |
-| `FR-009` | Accepted; policy slice planned |
-| `FR-010` | Accepted; selection slice planned |
-| `FR-011` | `CommitmentLedgerTest`; In progress |
-| `FR-012` | `ApprovalAuthorisationTest`; In progress |
-| `FR-013` | Deferred; no E2E claim |
-| `FR-014` | `BACKLOG.md`; Deferred |
-| `FR-015` | `BACKLOG.md`; Deferred |
-| `FR-016` | `BACKLOG.md`; Deferred |
-| `FR-017` | Deferred; no E2E claim |
-| `FR-018` | Deferred; no E2E claim |
-| `FR-019` | `BACKLOG.md`; Deferred |
-| `FR-020` | `BACKLOG.md`; Deferred |
-| `FR-021` | `BACKLOG.md`; Deferred |
-| `DATA-001` | `CommitmentLedgerTest`; In progress |
-| `DATA-002` | `CommitmentLedgerTest`; In progress |
-| `DATA-003` | `BACKLOG.md`; Deferred |
-| `SEC-001` | `ApprovalAuthorisationTest`; In progress |
-| `SEC-002` | `BACKLOG.md`; Deferred |
-| `SEC-003` | `SyntheticLoginIntegrationTest`, Playwright login/denial journey; Partial implementation |
-| `SEC-004` | Synthetic profile configuration and local-only documentation; Partial implementation |
-| `NFR-001` | `CommitmentLedgerTest`; In progress |
-| `NFR-002` | CI/tasks, JaCoCo 90% gate and Playwright E2E command; Partial implementation |
-| `NFR-003` | Vite build, accessible Playwright queries and style guide; Partial implementation |
-| `NFR-004` | `BACKLOG.md`; Deferred |
-| `NFR-005` | `E2E_REQUIREMENTS_MATRIX.md`, Playwright journeys and requirement traceability; Implemented for current scope |
-| `NFR-006` | JaCoCo coverage profile with 90% instruction/line checks; Implemented |
-| `FR-022` | `LoginController`, `SyntheticSecurityConfiguration`, `frontend/src/main.tsx`; `SyntheticLoginIntegrationTest` (all fixture profiles, invalid credentials, session and logout); representative browser sign-in/denial in `frontend/e2e/activity-setup.spec.ts` | Implemented |
+| Requirement | Evidence/status                                                                                                                                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------- |
+| `FR-001`    | Activity setup/read scope; API and Playwright setup evidence; Partial implementation                                                                                                                                                                          |
+| `FR-002`    | Nomination invitation API and Playwright invitation evidence; Partial implementation                                                                                                                                                                          |
+| `FR-003`    | Accepted; self-service slice planned                                                                                                                                                                                                                          |
+| `FR-004`    | Accepted; entitlement slice planned                                                                                                                                                                                                                           |
+| `FR-005`    | Accepted; catering slice planned                                                                                                                                                                                                                              |
+| `FR-006`    | Accepted; fee-rule slice planned                                                                                                                                                                                                                              |
+| `FR-007`    | Accepted; provider model planned                                                                                                                                                                                                                              |
+| `FR-008`    | Accepted; revision model planned                                                                                                                                                                                                                              |
+| `FR-009`    | Accepted; policy slice planned                                                                                                                                                                                                                                |
+| `FR-010`    | Accepted; selection slice planned                                                                                                                                                                                                                             |
+| `FR-011`    | `CommitmentLedgerTest`; In progress                                                                                                                                                                                                                           |
+| `FR-012`    | `ApprovalAuthorisationTest`; In progress                                                                                                                                                                                                                      |
+| `FR-013`    | Deferred; no E2E claim                                                                                                                                                                                                                                        |
+| `FR-014`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `FR-015`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `FR-016`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `FR-017`    | Deferred; no E2E claim                                                                                                                                                                                                                                        |
+| `FR-018`    | Deferred; no E2E claim                                                                                                                                                                                                                                        |
+| `FR-019`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `FR-020`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `FR-021`    | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `DATA-001`  | `CommitmentLedgerTest`; In progress                                                                                                                                                                                                                           |
+| `DATA-002`  | `CommitmentLedgerTest`; In progress                                                                                                                                                                                                                           |
+| `DATA-003`  | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `SEC-001`   | `ApprovalAuthorisationTest`; In progress                                                                                                                                                                                                                      |
+| `SEC-002`   | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `SEC-003`   | `SyntheticLoginIntegrationTest`, Playwright login/denial journey; Partial implementation                                                                                                                                                                      |
+| `SEC-004`   | Synthetic profile configuration and local-only documentation; Partial implementation                                                                                                                                                                          |
+| `NFR-001`   | `CommitmentLedgerTest`; In progress                                                                                                                                                                                                                           |
+| `NFR-002`   | CI/tasks, JaCoCo 90% gate and Playwright E2E command; Partial implementation                                                                                                                                                                                  |
+| `NFR-003`   | Vite build, accessible Playwright queries and style guide; Partial implementation                                                                                                                                                                             |
+| `NFR-004`   | `BACKLOG.md`; Deferred                                                                                                                                                                                                                                        |
+| `NFR-005`   | `E2E_REQUIREMENTS_MATRIX.md`, Playwright journeys and requirement traceability; Implemented for current scope                                                                                                                                                 |
+| `NFR-006`   | JaCoCo coverage profile with 90% instruction/line checks; Implemented                                                                                                                                                                                         |
+| `NFR-007`   | Major-object E2E matrix and Playwright journeys; Implemented                                                                                                                                                                                                  |
+| `NFR-008`   | `ActivityWorkflowIntegrationTest`; Implemented                                                                                                                                                                                                                |
+| `FR-022`    | `LoginController`, `SyntheticSecurityConfiguration`, `frontend/src/main.tsx`; `SyntheticLoginIntegrationTest` (all fixture profiles, invalid credentials, session and logout); representative browser sign-in/denial in `frontend/e2e/activity-setup.spec.ts` | Implemented                                                                          |
+| `FR-023`    | `Workspace` activity sorting and pagination controls                                                                                                                                                                                                          | `frontend/e2e/activity-setup.spec.ts`: verifies ordering control and page navigation | Implemented |
+| `FR-024`    | Activity creation/edit authorisation in `ActivitySetupController` and workspace controls                                                                                                                                                                      | API role-denial/update tests and Playwright activity-edit journey                    | Implemented |
+| `FR-025`    | Compact workspace header in `Workspace`                                                                                                                                                                                                                       | Playwright signed-in header assertion                                                | Implemented |

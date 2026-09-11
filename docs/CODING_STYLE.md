@@ -42,6 +42,8 @@ Work in small, reversible increments using red-green-refactor:
 
 Tests are behaviour evidence: pure domain rules are fast unit tests, API boundaries use integration tests, and supported journeys use browser tests. Use deterministic fixture codes rather than database order or incidental implementation details.
 
+Component integration tests use the production Spring wiring at the boundary under test; they do not replace a repository, security component or infrastructure adapter with a mock and then claim cross-component evidence. Assign disposable datasource and storage paths, use unique business codes, and remove test-created rows and files in teardown. Refactor test setup into small helpers so each test reads as an acceptance example and failure output remains diagnosable.
+
 ## Definition of done
 
 A change is done only when its requirement, focused test, implementation, refactoring, documentation, traceability and security evidence agree; the relevant quality gate passes from a clean build; and the diff contains no secrets, generated test output or unrelated changes.

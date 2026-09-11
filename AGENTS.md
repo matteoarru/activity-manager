@@ -21,3 +21,6 @@
 - Map every supported user or system journey to independently diagnosable automated evidence at the appropriate level.
 - Pure domain rules should target 100% coverage. Set enforceable global thresholds separately for statements, branches, functions and lines; explain them in `docs/TEST_PLAN.md`.
 - Activate sandbox integration testing when the product introduces APIs, persistence, identity, external systems, scheduled jobs or message queues.
+- Component integration tests use production wiring rather than mocks at the boundary under test. Give each test an isolated datasource and storage location; clean test-only records and files after every test.
+- Browser tests run against an isolated, disposable backend. Never leave E2E records, uploads or invitations in the local demonstration database.
+- Keep tests readable as production code: extract repeated authentication, payload construction and navigation into focused helpers, while retaining independently diagnosable assertions.

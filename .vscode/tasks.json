@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Standard: Verify documentation",
+      "type": "shell",
+      "command": "bash scripts/verify-documentation.sh",
+      "problemMatcher": []
+    },
+    {
+      "label": "Standard: Full release gate",
+      "type": "shell",
+      "command": "<replace-with-release-check-command>",
+      "problemMatcher": [],
+      "detail": "Replace this placeholder after choosing a stack profile."
+    }
+  ]
+}

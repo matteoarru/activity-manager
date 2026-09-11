@@ -1,0 +1,8 @@
+# Engineering practices
+
+- Use formatter, lint, static analysis and tests in every change.
+- Prefer current compatible stable dependencies; document a concrete compatibility or functional reason and review date for every deferred upgrade.
+- Review requirements, architecture, data model, traceability, tests, deployment guide and changelog whenever a change affects them.
+- Keep pull requests small, reviewable and evidence-backed.
+- Treat warnings and failed quality gates as work to assess, not output to suppress.
+- Use ADRs for decisions that affect more than a local implementation detail.

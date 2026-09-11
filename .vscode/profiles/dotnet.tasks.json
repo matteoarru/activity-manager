@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Test: Run Test Task", "type": "shell", "command": "dotnet test", "group": { "kind": "test", "isDefault": true } },
+    { "label": "Standard: Coverage", "type": "shell", "command": "dotnet test --collect:XPlat\\ Code\\ Coverage", "group": "test" },
+    { "label": "Standard: Build", "type": "shell", "command": "dotnet build --configuration Release", "group": "build" },
+    { "label": "Standard: Full release gate", "type": "shell", "command": "<replace-with-release-check-command>", "group": "test" }
+  ]
+}

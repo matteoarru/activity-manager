@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Test: Run Test Task", "type": "shell", "command": "pytest", "group": { "kind": "test", "isDefault": true } },
+    { "label": "Standard: Coverage", "type": "shell", "command": "pytest --cov", "group": "test" },
+    { "label": "Standard: E2E", "type": "shell", "command": "<replace-with-e2e-command>", "group": "test" },
+    { "label": "Standard: Build", "type": "shell", "command": "<replace-with-build-command>", "group": "build" },
+    { "label": "Standard: Full release gate", "type": "shell", "command": "<replace-with-release-check-command>", "group": "test" }
+  ]
+}

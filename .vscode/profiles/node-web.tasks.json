@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Test: Run Test Task", "type": "npm", "script": "test", "group": { "kind": "test", "isDefault": true } },
+    { "label": "Standard: Coverage", "type": "npm", "script": "test:coverage", "group": "test" },
+    { "label": "Standard: E2E", "type": "npm", "script": "test:e2e", "group": "test" },
+    { "label": "Standard: Build", "type": "npm", "script": "build", "group": "build" },
+    { "label": "Standard: Full release gate", "type": "npm", "script": "release:check", "group": "test" }
+  ]
+}

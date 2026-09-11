@@ -1,0 +1,19 @@
+# Stack outputs: extend after selecting a profile
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+__pycache__/
+.venv/
+bin/
+obj/
+target/
+*.log
+.env
+.env.*
+!.env.example
+
+# Editor-local state
+.vscode/*.code-workspace
+.idea/

@@ -1,15 +1,22 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { request } from "../api/client";
-import { Activity } from "../domain/activity";
+import { Activity, ActivityManager } from "../domain/activity";
 
 type SetupPanelProps = {
   onCreated: (activity: Activity) => void;
   onCancel: () => void;
+  currentUsername: string;
 };
 
-export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
+export function SetupPanel({ onCreated, onCancel, currentUsername }: SetupPanelProps) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [managers, setManagers] = useState<ActivityManager[]>([]);
+  const [managerUsernames, setManagerUsernames] = useState<string[]>([currentUsername]);
+
+  useEffect(() => {
+    request<ActivityManager[]>("/v1/activity-managers").then(setManagers).catch(() => undefined);
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,7 +24,7 @@ export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
     setMessage("");
     const form = new FormData(event.currentTarget);
     const payload = {
-      code: form.get("code"),
+      arn: form.get("arn"),
       title: form.get("title"),
       description: form.get("description"),
       countryCode: form.get("countryCode"),
@@ -28,12 +35,14 @@ export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
       expectedParticipants: Number(form.get("expectedParticipants")),
       fundingRegime: form.get("fundingRegime"),
       invitationModality: "NOMINATION",
+      nominationDeadline: form.get("nominationDeadline"),
       cplReference: form.get("cplReference"),
       cplByCostType: {
         travel: form.get("travelCpl"),
         hotel: form.get("hotelCpl"),
         catering: form.get("cateringCpl"),
       },
+      managerUsernames,
     };
     try {
       let activity = await request<Activity>("/v1/activities", {
@@ -81,8 +90,8 @@ export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
       </div>
       <form className="setup-form" onSubmit={submit}>
         <label>
-          Course code
-          <input required name="code" placeholder="2026-COURSE-01" />
+          Activity Reference Number (ARN)
+          <input required name="arn" placeholder="2026-ARN-01" />
         </label>
         <label>
           Title
@@ -132,7 +141,29 @@ export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
             Ends
             <input required name="endsOn" type="date" />
           </label>
+          <label>
+            Nomination deadline
+            <input required name="nominationDeadline" type="date" />
+          </label>
         </div>
+        <fieldset>
+          <legend>Activity managers</legend>
+          <p className="hint">Assign one or more AM, PO, IA or AO users.</p>
+          {managers.map((manager) => (
+            <label className="check-label" key={manager.username}>
+              <input
+                type="checkbox"
+                checked={managerUsernames.includes(manager.username)}
+                onChange={(event) => setManagerUsernames((current) =>
+                  event.target.checked
+                    ? [...current, manager.username]
+                    : current.filter((username) => username !== manager.username),
+                )}
+              />
+              {manager.username} · {manager.role}
+            </label>
+          ))}
+        </fieldset>
         <label>
           Default CPL reference (all orders)
           <input name="cplReference" placeholder="CPL-2026-001" />
@@ -155,7 +186,7 @@ export function SetupPanel({ onCreated, onCancel }: SetupPanelProps) {
           Curricula file
           <input name="curriculum" type="file" accept=".pdf,.doc,.docx" />
         </label>
-        <button disabled={busy} type="submit">
+        <button disabled={busy || managerUsernames.length === 0} type="submit">
           {busy ? "Creating…" : "Create activity"}
         </button>
         {message && (

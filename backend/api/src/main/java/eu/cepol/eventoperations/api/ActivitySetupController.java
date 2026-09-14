@@ -6,10 +6,12 @@ import eu.cepol.eventoperations.infrastructure.activity.CurriculumStorage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -47,6 +49,7 @@ class ActivitySetupController {
   @ResponseStatus(HttpStatus.CREATED)
   ActivityRecord create(@Valid @RequestBody CreateActivity request, Authentication actor) {
     requireTeam(actor);
+    List<String> managerUsernames = managersIncludingCreator(actor.getName(), request.managerUsernames());
     if (!NOMINATION.equals(request.invitationModality())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only NOMINATION invitation modality is currently supported");
     }
@@ -58,7 +61,7 @@ class ActivitySetupController {
           HttpStatus.BAD_REQUEST, "CPL allocation is not valid JSON", e);
     }
     return activities.create(
-        request.code(),
+        request.arn(),
         request.title(),
         request.description(),
         request.countryCode(),
@@ -68,11 +71,12 @@ class ActivitySetupController {
         request.endsOn(),
         request.expectedParticipants(),
         request.fundingRegime(),
-        actor.getName(),
-        String.join(",", request.supportUsernames()),
+        primaryManager(managerUsernames),
+        additionalManagers(managerUsernames),
         request.cplReference(),
         cpl,
-        request.invitationModality());
+        request.invitationModality(),
+        request.nominationDeadline());
   }
 
   @PutMapping("/activities/{id}")
@@ -83,12 +87,15 @@ class ActivitySetupController {
     requireManagerOf(id, actor);
     return activities.update(
         id,
+        request.arn(),
         request.title(),
         request.description(),
         request.venue(),
         request.startsOn(),
         request.endsOn(),
-        request.expectedParticipants());
+        request.expectedParticipants(),
+        primaryManager(request.managerUsernames()),
+        additionalManagers(request.managerUsernames()));
   }
 
   @PostMapping(value = "/activities/{id}/curriculum", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -111,7 +118,7 @@ class ActivitySetupController {
   }
 
   @PostMapping("/activities/{id}/nomination-invitations")
-  Map<String, Object> inviteCnus(
+  InvitationResult inviteCnus(
       @PathVariable("id") String id,
       @RequestBody InvitationRequest request,
       Authentication actor) {
@@ -120,13 +127,105 @@ class ActivitySetupController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select at least one CNU");
     }
     int sent = activities.invite(id, request.cnuUsernames().stream().distinct().toList(), actor.getName());
-    return Map.of("activityId", id, "modality", NOMINATION, "invitedCount", sent);
+    activities.markInvited(id, request.nominationDeadline());
+    return new InvitationResult(activities.findById(id), sent);
+  }
+
+  @PostMapping("/activities/{id}/nominations")
+  @ResponseStatus(HttpStatus.CREATED)
+  Map<String, String> nominate(@PathVariable("id") String id, @Valid @RequestBody NominationRequest request, Authentication actor) {
+    if (!actor.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_CNU"))) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only CNUs may submit nominations");
+    }
+    ActivityRecord activity = activities.findById(id);
+    if (!"INVITED".equals(activity.status())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Nominations are not open for this activity");
+    }
+    activities.addNomination(id, actor.getName(), request.nomineeName());
+    return Map.of("status", "submitted");
+  }
+
+  @GetMapping("/activities/{id}/nominations")
+  List<Map<String, Object>> nominations(@PathVariable("id") String id, Authentication actor) {
+    requireManagerOf(id, actor);
+    return activities.nominations(id);
+  }
+
+  @PostMapping("/activities/{id}/nominations/select")
+  ActivityRecord selectNominations(@PathVariable("id") String id, @RequestBody SelectionRequest request, Authentication actor) {
+    requireManagerOf(id, actor);
+    if (!"AWAITING_SELECTION".equals(activities.findById(id).status())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Nominations may be selected after the nomination deadline");
+    }
+    if (request.nominationIds() == null || request.nominationIds().isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select at least one nomination");
+    }
+    activities.selectNominations(id, request.nominationIds().stream().distinct().toList());
+    return activities.findById(id);
+  }
+
+  @PostMapping("/activities/{id}/cost-lines")
+  Map<String, String> addCostLine(@PathVariable("id") String id, @Valid @RequestBody CostLineRequest request, Authentication actor) {
+    requireManagerOf(id, actor);
+    return Map.of("id", activities.addCostLine(id, request.description()));
+  }
+
+  @PostMapping("/activities/{id}/cost-lines/{costLineId}/paid")
+  void markCostLinePaid(@PathVariable("id") String id, @PathVariable("costLineId") String costLineId, Authentication actor) {
+    requireManagerOf(id, actor);
+    activities.markCostLinePaid(id, costLineId);
+  }
+
+  @PostMapping("/activities/{id}/close")
+  ActivityRecord close(@PathVariable("id") String id, Authentication actor) {
+    requireManagerOf(id, actor);
+    ActivityRecord activity = activities.findById(id);
+    if (!"CONCLUDED".equals(activity.status()) || !activities.allCostLinesPaid(id)) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Concluded activity must have all cost lines paid before closing");
+    }
+    activities.setStatus(id, "CLOSED");
+    return activities.findById(id);
+  }
+
+  @PostMapping("/activities/{id}/cancel")
+  ActivityRecord cancel(@PathVariable("id") String id, Authentication actor) {
+    requireManagerOf(id, actor);
+    activities.setStatus(id, "CANCELLED");
+    return activities.findById(id);
   }
 
   @GetMapping("/cnus")
   List<Map<String, Object>> cnus(Authentication actor) {
     requireTeam(actor);
     return activities.findCnus();
+  }
+
+  @GetMapping("/activity-managers")
+  List<Map<String, String>> activityManagers(Authentication actor) {
+    requireTeam(actor);
+    return activities.findActivityManagers();
+  }
+
+  private String primaryManager(List<String> managerUsernames) {
+    validateManagers(managerUsernames);
+    return managerUsernames.getFirst();
+  }
+
+  private List<String> managersIncludingCreator(String creator, List<String> requestedManagers) {
+    return Stream.concat(Stream.of(creator), requestedManagers.stream()).distinct().toList();
+  }
+
+  private String additionalManagers(List<String> managerUsernames) {
+    validateManagers(managerUsernames);
+    return String.join(",", managerUsernames.stream().skip(1).toList());
+  }
+
+  private void validateManagers(List<String> managerUsernames) {
+    var eligible = activities.findActivityManagers().stream().map(manager -> manager.get("username")).toList();
+    if (managerUsernames.stream().distinct().count() != managerUsernames.size()
+        || !eligible.containsAll(managerUsernames)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select one or more eligible activity managers");
+    }
   }
 
   private void requireTeam(Authentication actor) {
@@ -158,22 +257,28 @@ class ActivitySetupController {
     }
     return original.replaceAll("[^A-Za-z0-9._-]", "_");
   }
-  record InvitationRequest(List<String> cnuUsernames) {}
+  record InvitationRequest(List<String> cnuUsernames, @NotNull java.time.LocalDate nominationDeadline) {}
+  record InvitationResult(ActivityRecord activity, int invitedCount) {}
+  record NominationRequest(@NotBlank String nomineeName) {}
+  record SelectionRequest(List<String> nominationIds) {}
+  record CostLineRequest(@NotBlank String description) {}
 
   record UpdateActivity(
+      @NotBlank String arn,
       @NotBlank String title,
       String description,
       @NotBlank String venue,
       @NotNull java.time.LocalDate startsOn,
       @NotNull java.time.LocalDate endsOn,
-      @Min(0) int expectedParticipants) {
+      @Min(0) int expectedParticipants,
+      @NotEmpty List<String> managerUsernames) {
     UpdateActivity {
       description = description == null ? "" : description;
     }
   }
 
   record CreateActivity(
-      @NotBlank String code,
+      @NotBlank String arn,
       @NotBlank String title,
       String description,
       @NotBlank String countryCode,
@@ -183,13 +288,14 @@ class ActivitySetupController {
       java.time.LocalDate endsOn,
       @Min(0) int expectedParticipants,
       @NotBlank String fundingRegime,
-      List<String> supportUsernames,
+      @NotEmpty List<String> managerUsernames,
       String cplReference,
       Map<String, String> cplByCostType,
-      String invitationModality) {
+      String invitationModality,
+      @NotNull java.time.LocalDate nominationDeadline) {
     CreateActivity {
       description = description == null ? "" : description;
-      supportUsernames = supportUsernames == null ? List.of() : supportUsernames;
+      managerUsernames = managerUsernames == null ? List.of() : managerUsernames;
       cplByCostType = cplByCostType == null ? Map.of() : cplByCostType;
       invitationModality = invitationModality == null ? NOMINATION : invitationModality;
     }

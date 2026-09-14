@@ -2,10 +2,16 @@ import { useEffect, useState } from "react";
 import { request } from "../api/client";
 import { Activity, Cnu } from "../domain/activity";
 
-export function InvitationPanel({ activity }: { activity: Activity }) {
+type InvitationPanelProps = {
+  activity: Activity;
+  onInvited: (activity: Activity) => void;
+};
+
+export function InvitationPanel({ activity, onInvited }: InvitationPanelProps) {
   const [cnus, setCnus] = useState<Cnu[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [deadline, setDeadline] = useState(activity.nominationDeadline ?? "");
 
   useEffect(() => {
     request<Cnu[]>("/v1/cnus")
@@ -15,13 +21,14 @@ export function InvitationPanel({ activity }: { activity: Activity }) {
 
   async function invite() {
     try {
-      const result = await request<{ invitedCount: number }>(
+      const result = await request<{ invitedCount: number; activity: Activity }>(
         `/v1/activities/${activity.id}/nomination-invitations`,
-        { method: "POST", body: JSON.stringify({ cnuUsernames: selected }) },
+        { method: "POST", body: JSON.stringify({ cnuUsernames: selected, nominationDeadline: deadline }) },
       );
       setMessage(
         `${result.invitedCount} CNU invitation(s) recorded for nomination.`,
       );
+      onInvited(result.activity);
     } catch (reason) {
       setMessage(
         reason instanceof Error ? reason.message : "Invitation failed",
@@ -50,7 +57,11 @@ export function InvitationPanel({ activity }: { activity: Activity }) {
           </label>
         ))}
       </div>
-      <button type="button" onClick={invite} disabled={selected.length === 0}>
+      <label>
+        Nomination deadline
+        <input required type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
+      </label>
+      <button type="button" onClick={invite} disabled={selected.length === 0 || !deadline}>
         Send nomination invitation
       </button>
       {message && <small>{message}</small>}

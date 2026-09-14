@@ -1,11 +1,14 @@
-import { Activity, formatDate } from "../domain/activity";
+import { Activity, formatDate, Profile } from "../domain/activity";
 import { InvitationPanel } from "./InvitationPanel";
+import { NominationPanel } from "./NominationPanel";
 
 type ActivityDetailProps = {
   activity: Activity;
   canSetUpActivities: boolean;
   onBack: () => void;
   onEdit: () => void;
+  onUpdated: (activity: Activity) => void;
+  profile: Profile;
 };
 
 export function ActivityDetail({
@@ -13,6 +16,8 @@ export function ActivityDetail({
   canSetUpActivities,
   onBack,
   onEdit,
+  onUpdated,
+  profile,
 }: ActivityDetailProps) {
   return (
     <section aria-labelledby="activity-detail-title" className="detail-page">
@@ -87,8 +92,11 @@ export function ActivityDetail({
           <p>
             Select the CNUs that should receive an invitation for this activity.
           </p>
-          <InvitationPanel activity={activity} />
+          <InvitationPanel activity={activity} onInvited={onUpdated} />
         </section>
+      )}
+      {profile.roles.includes("ROLE_CNU") && activity.status === "INVITED" && (
+        <NominationPanel activity={activity} />
       )}
     </section>
   );

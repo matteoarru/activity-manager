@@ -6,7 +6,7 @@ An API-first operational workspace for CEPOL onsite activities. It reduces re-en
 
 ## Scope
 
-The first synthetic vertical slice covers activity/nomination provenance, an IA-prepared priced request, protected commitment hold, delegated AM approval, provider instruction, invoice matching and Finance registration hand-off. It excludes live booking/payment, ABAC posting, production OIDC, real supplier communication, Moodle/ERP database sharing and auditor accounts.
+The first synthetic vertical slice covers activity setup and lifecycle: nomination invitations and CNU nominations, manager selection, date-based conclusion, recorded cost-line closure and cancellation. It also covers an IA-prepared priced request, protected commitment hold, delegated AM approval, provider instruction, invoice matching and Finance registration hand-off. It excludes live booking/payment, ABAC posting, production OIDC, real supplier communication, Moodle/ERP database sharing and auditor accounts.
 
 ## Success measures
 

@@ -12,7 +12,12 @@ export type Activity = {
   expectedParticipants: number;
   cplReference?: string;
   curriculaFileName?: string;
+  amUsername: string;
+  supportUsernames: string;
+  nominationDeadline?: string;
 };
+
+export type ActivityManager = { username: string; role: string };
 
 export type Cnu = {
   username: string;

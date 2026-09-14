@@ -8,6 +8,8 @@ type ActivityListProps = {
   canSetUpActivities: boolean;
   onAddActivity: () => void;
   onSelectActivity: (activity: Activity) => void;
+  showAllActivities: boolean;
+  onShowAllActivitiesChange: (showAll: boolean) => void;
 };
 
 export function ActivityList({
@@ -15,6 +17,8 @@ export function ActivityList({
   canSetUpActivities,
   onAddActivity,
   onSelectActivity,
+  showAllActivities,
+  onShowAllActivitiesChange,
 }: ActivityListProps) {
   const [sort, setSort] = useState<ActivitySort>("date-asc");
   const [page, setPage] = useState(1);
@@ -45,7 +49,7 @@ export function ActivityList({
         <div>
           <p className="eyebrow">Workspace</p>
           <h2 id="activities">Activities</h2>
-          <p>Activities assigned to your role.</p>
+          <p>{showAllActivities ? "All activities." : "Activities assigned to you."}</p>
         </div>
         {canSetUpActivities && (
           <button type="button" onClick={onAddActivity}>
@@ -53,15 +57,18 @@ export function ActivityList({
           </button>
         )}
       </div>
-      {activities.length === 0 ? (
-        <p className="empty-state">
-          No activities are assigned to this profile.
-        </p>
-      ) : (
-        <>
+      <div className="activity-controls" aria-label="Activity list controls">
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={showAllActivities}
+            onChange={(event) => onShowAllActivitiesChange(event.target.checked)}
+          />
+          Show all activities
+        </label>
+        {activities.length > 0 && (
           <div
-            className="activity-controls"
-            aria-label="Activity list controls"
+            className="activity-sort-control"
           >
             <label>
               Order by
@@ -78,6 +85,12 @@ export function ActivityList({
               </select>
             </label>
           </div>
+        )}
+      </div>
+      {activities.length === 0 ? (
+        <p className="empty-state">No activities are assigned to this profile.</p>
+      ) : (
+        <>
           <ul className="activity-list" aria-label="Activities">
             {visibleActivities.map((activity) => (
               <li key={activity.id}>

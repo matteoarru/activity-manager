@@ -73,6 +73,13 @@ test.describe("activity workspace", () => {
     await expect(page.getByText("Page 1 of 2")).toBeVisible();
   });
 
+  test("the all-activities flag widens the assigned activity view", async ({ page }) => {
+    await signIn(page, "cnu.clara");
+    await expect(page.getByText("No activities are assigned to this profile.")).toBeVisible();
+    await page.getByLabel("Show all activities").check();
+    await expect(page.getByText("2026-DEM-01")).toBeVisible();
+  });
+
   for (const username of activityManagers) {
     test(`${username} can access activity setup and editing controls`, async ({
       page,
@@ -81,6 +88,9 @@ test.describe("activity workspace", () => {
       await expect(
         page.getByRole("button", { name: "Add activity" }),
       ).toBeVisible();
+      if (!(await page.getByRole("list", { name: "Activities" }).count())) {
+        await page.getByLabel("Show all activities").check();
+      }
       await page
         .getByRole("list", { name: "Activities" })
         .getByRole("button")
@@ -119,7 +129,7 @@ test.describe("activity workspace", () => {
       page.getByRole("heading", { name: "Set up an activity" }),
     ).toBeVisible();
     const code = `E2E-${Date.now()}`;
-    await page.getByLabel("Course code").fill(code);
+    await page.getByLabel("Activity Reference Number (ARN)").fill(code);
     await page.getByLabel("Title").fill("E2E activity");
     await page
       .getByLabel("Description")
@@ -130,9 +140,11 @@ test.describe("activity workspace", () => {
     await page.getByLabel("Expected participants").fill("12");
     await page.getByLabel("Starts").fill("2027-01-10");
     await page.getByLabel("Ends").fill("2027-01-12");
+    await page.getByLabel("Nomination deadline").first().fill("2026-12-20");
     await page.getByLabel("Funding regime").fill("STANDARD");
     await page.getByLabel("Default CPL reference (all orders)").fill("CPL-E2E");
     await page.getByLabel("Travel CPL").fill("CPL-TRAVEL");
+    await page.getByLabel("po.petra · PO").check();
     await page.getByLabel("Curricula file").setInputFiles({
       name: "curriculum.pdf",
       mimeType: "application/pdf",
@@ -148,6 +160,7 @@ test.describe("activity workspace", () => {
     ).toBeVisible();
     await expect(page.getByText("curriculum.pdf")).toBeVisible();
     await page.getByRole("button", { name: "Edit activity" }).click();
+    await page.getByLabel("Activity Reference Number (ARN)").fill(`${code}-UPDATED`);
     await page.getByLabel("Title").fill("Edited E2E activity");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(
@@ -164,5 +177,13 @@ test.describe("activity workspace", () => {
     await expect(invitationSection).toContainText(
       "invitation(s) recorded for nomination",
     );
+    await expect(page.getByText("INVITED", { exact: true })).toBeVisible();
+    await signOut(page, "am.alex");
+    await signIn(page, "cnu.clara");
+    await page.getByLabel("Show all activities").check();
+    await page.getByRole("listitem").filter({ hasText: `${code}-UPDATED` }).getByRole("button").click();
+    await page.getByLabel("Nominee name").fill("E2E nominee");
+    await page.getByRole("button", { name: "Submit nomination" }).click();
+    await expect(page.getByText("Nomination submitted.")).toBeVisible();
   });
 });

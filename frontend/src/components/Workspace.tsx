@@ -20,6 +20,7 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
     null,
   );
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showAllActivities, setShowAllActivities] = useState(false);
   const role =
     profile.roles
       .find((item) => item.startsWith("ROLE_"))
@@ -27,10 +28,10 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
   const canManageActivities = canSetUpActivities(profile);
 
   useEffect(() => {
-    request<Activity[]>("/v1/activities")
+    request<Activity[]>(`/v1/activities${showAllActivities ? "?showAll=true" : ""}`)
       .then(setActivities)
       .catch(() => undefined);
-  }, []);
+  }, [showAllActivities]);
 
   async function logout() {
     try {
@@ -41,12 +42,15 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
   }
 
   function saveUpdatedActivity(updated: Activity) {
+    const remainsAssigned = isAssignedTo(updated, profile.username);
     setActivities((current) =>
-      current.map((activity) =>
-        activity.id === updated.id ? updated : activity,
-      ),
+      !showAllActivities && !remainsAssigned
+        ? current.filter((activity) => activity.id !== updated.id)
+        : current.map((activity) =>
+            activity.id === updated.id ? updated : activity,
+          ),
     );
-    setSelectedActivity(updated);
+    setSelectedActivity(!showAllActivities && !remainsAssigned ? null : updated);
     setEditingActivity(null);
   }
 
@@ -73,6 +77,7 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
         />
         {showSetup ? (
           <SetupPanel
+            currentUsername={profile.username}
             onCreated={(activity) => {
               setActivities((current) => [...current, activity]);
               setShowSetup(false);
@@ -82,15 +87,21 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
         ) : editingActivity ? (
           <EditActivityPanel
             activity={editingActivity}
+            currentUsername={profile.username}
             onUpdated={saveUpdatedActivity}
             onCancel={() => setEditingActivity(null)}
           />
         ) : selectedActivity ? (
           <ActivityDetail
             activity={selectedActivity}
-            canSetUpActivities={canManageActivities}
+            canSetUpActivities={
+              canManageActivities &&
+              (role === "AO" || isAssignedTo(selectedActivity, profile.username))
+            }
             onBack={() => setSelectedActivity(null)}
             onEdit={() => setEditingActivity(selectedActivity)}
+            onUpdated={saveUpdatedActivity}
+            profile={profile}
           />
         ) : (
           <ActivityList
@@ -98,9 +109,15 @@ export function Workspace({ profile, onLogout }: WorkspaceProps) {
             canSetUpActivities={canManageActivities}
             onAddActivity={() => setShowSetup(true)}
             onSelectActivity={setSelectedActivity}
+            showAllActivities={showAllActivities}
+            onShowAllActivitiesChange={setShowAllActivities}
           />
         )}
       </main>
     </>
   );
+}
+
+function isAssignedTo(activity: Activity, username: string): boolean {
+  return [activity.amUsername, ...activity.supportUsernames.split(",")].includes(username);
 }

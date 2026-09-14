@@ -66,9 +66,9 @@ class ActivityWorkflowIntegrationTest {
                     .session(session)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
-                        "{\"code\":\""
+                        "{\"arn\":\""
                             + code
-                            + "\",\"title\":\"Integration activity\",\"description\":\"Created across components\",\"countryCode\":\"HU\",\"venue\":\"Budapest\",\"timeZone\":\"Europe/Budapest\",\"startsOn\":\"2027-01-10\",\"endsOn\":\"2027-01-12\",\"expectedParticipants\":12,\"fundingRegime\":\"STANDARD\",\"invitationModality\":\"NOMINATION\",\"cplReference\":\"CPL-INT\",\"cplByCostType\":{\"travel\":\"CPL-TRAVEL\"}}"))
+                            + "\",\"title\":\"Integration activity\",\"description\":\"Created across components\",\"countryCode\":\"HU\",\"venue\":\"Budapest\",\"timeZone\":\"Europe/Budapest\",\"startsOn\":\"2027-01-10\",\"endsOn\":\"2027-01-12\",\"nominationDeadline\":\"2027-01-05\",\"expectedParticipants\":12,\"fundingRegime\":\"STANDARD\",\"invitationModality\":\"NOMINATION\",\"managerUsernames\":[\"am.alex\",\"po.petra\"],\"cplReference\":\"CPL-INT\",\"cplByCostType\":{\"travel\":\"CPL-TRAVEL\"}}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.courseReference").value(code))
             .andReturn();
@@ -79,7 +79,7 @@ class ActivityWorkflowIntegrationTest {
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"title\":\"Updated integration activity\",\"description\":\"Updated across components\",\"venue\":\"The Hague\",\"startsOn\":\"2027-01-11\",\"endsOn\":\"2027-01-13\",\"expectedParticipants\":14}"))
+                    "{\"arn\":\"INT-UPDATED\",\"title\":\"Updated integration activity\",\"description\":\"Updated across components\",\"venue\":\"The Hague\",\"startsOn\":\"2027-01-11\",\"endsOn\":\"2027-01-13\",\"expectedParticipants\":14,\"managerUsernames\":[\"am.alex\",\"po.petra\"]}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.title").value("Updated integration activity"));
 
@@ -97,13 +97,13 @@ class ActivityWorkflowIntegrationTest {
             post("/api/v1/activities/" + id + "/nomination-invitations")
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"cnuUsernames\":[\"cnu.clara\",\"cnu.niko\"]}"))
+                .content("{\"cnuUsernames\":[\"cnu.clara\",\"cnu.niko\"],\"nominationDeadline\":\"2027-01-05\"}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.invitedCount").value(2));
 
     mvc.perform(get("/api/v1/activities").session(session))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[?(@.courseReference == '" + code + "')].title").value("Updated integration activity"));
+        .andExpect(jsonPath("$[?(@.courseReference == 'INT-UPDATED')].title").value("Updated integration activity"));
 
     var jdbc = new JdbcTemplate(dataSource);
     String objectKey =

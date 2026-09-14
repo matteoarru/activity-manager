@@ -42,6 +42,17 @@ async function signOut(page: Page, username: string) {
 }
 
 test.describe("synthetic profile journeys", () => {
+  test("AM can sign in and retain the authenticated session after reload", async ({
+    page,
+  }) => {
+    await signIn(page, "am.alex");
+    await expect(
+      page.getByRole("button", { name: "Open account menu for am.alex" }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Activities" })).toBeVisible();
+  });
+
   for (const username of allProfiles) {
     test(`${username} can sign in and sign out`, async ({ page }) => {
       await signIn(page, username);
